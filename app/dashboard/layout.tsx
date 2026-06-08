@@ -21,26 +21,76 @@ export default async function DashboardLayout({
     .eq("id", user.id)
     .single();
 
+  const name: string = profile?.full_name ?? "Student";
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="min-h-screen bg-cream">
-      <nav className="border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-lg font-bold text-burgundy"
-          >
-            <span>🌲</span>
-            AUB Club Portal
-          </Link>
+      <header className="border-b border-aub-line bg-cream shadow-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-10">
+          <div className="flex items-center gap-8">
+            <Link
+              href="/dashboard"
+              className="font-display text-2xl font-semibold text-burgundy"
+            >
+              AUB Portal
+            </Link>
+            <nav className="hidden items-center gap-8 md:flex">
+              <Link
+                href="/dashboard"
+                className="border-b-2 border-burgundy pb-1 text-sm font-bold text-burgundy"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/status"
+                className="text-sm text-aub-muted transition-colors hover:text-burgundy"
+              >
+                My Application
+              </Link>
+              <span className="text-sm text-aub-muted">Clubs</span>
+              <span className="text-sm text-aub-muted">Calendar</span>
+            </nav>
+          </div>
+
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm font-medium text-gray-600 sm:block">
-              {profile?.full_name ?? "Student"}
-            </span>
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-semibold text-aub-ink">{name}</p>
+              <p className="text-xs text-aub-muted">AUB Student</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-aub-line bg-aub-panel text-xs font-bold text-burgundy">
+              {initials}
+            </div>
             <LogoutButton />
           </div>
         </div>
-      </nav>
-      <div className="mx-auto max-w-5xl px-6 py-8">{children}</div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-5 py-12 md:px-10">{children}</main>
+
+      <footer className="mt-16 border-t border-aub-line bg-aub-panel px-5 py-8 md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 md:flex-row md:items-center">
+          <div>
+            <p className="font-display text-lg font-bold text-burgundy">
+              AUB Portal
+            </p>
+            <p className="mt-1 text-sm text-aub-muted">
+              © 2026 American University of Beirut. All Rights Reserved.
+            </p>
+          </div>
+          <nav className="flex flex-wrap gap-6 text-xs font-semibold text-aub-muted">
+            <span>Privacy Policy</span>
+            <span>Terms of Service</span>
+            <span>Contact Support</span>
+            <span>University Home</span>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }

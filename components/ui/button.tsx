@@ -9,10 +9,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses = {
   primary:
-    "bg-burgundy text-white hover:bg-burgundy-dark focus-visible:ring-burgundy",
+    "bg-burgundy text-white shadow-[0_10px_20px_-8px_rgba(107,26,42,0.45)] hover:-translate-y-0.5 hover:bg-berytus hover:shadow-[0_15px_28px_-10px_rgba(107,26,42,0.5)] focus-visible:ring-burgundy",
   secondary:
     "border border-burgundy text-burgundy hover:bg-burgundy hover:text-white focus-visible:ring-burgundy",
-  ghost: "text-gray-600 hover:bg-gray-100 focus-visible:ring-gray-400",
+  ghost: "text-aub-muted hover:bg-aub-panel focus-visible:ring-aub-line",
   danger: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
 };
 
@@ -40,7 +40,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors",
+          "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           "disabled:pointer-events-none disabled:opacity-50",
           variantClasses[variant],

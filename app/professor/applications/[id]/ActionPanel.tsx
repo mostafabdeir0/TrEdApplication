@@ -136,7 +136,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
   const isDecided = status === "accepted" || status === "rejected";
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+    <div className="overflow-hidden border border-aub-line bg-white shadow-sm">
       {/* Header */}
       <div className="bg-burgundy px-6 py-5">
         <Link
@@ -175,7 +175,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
               <button
                 disabled={loading === "under_review"}
                 onClick={() => handleStatusUpdate("under_review", markUnderReview)}
-                className="flex w-full items-center justify-center rounded-lg bg-gray-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded bg-aub-muted px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-aub-ink disabled:opacity-50"
               >
                 {loading === "under_review" ? "Updating…" : "Mark as Under Review"}
               </button>
@@ -185,13 +185,13 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
             {!showMeetingForm ? (
               <button
                 onClick={() => setShowMeetingForm(true)}
-                className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="flex w-full items-center justify-center rounded bg-bliss-blue px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Invite to Meeting
               </button>
             ) : (
-              <div className="space-y-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+              <div className="space-y-3 border border-aub-line bg-aub-soft p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-burgundy">
                   Schedule Interview
                 </p>
                 <Input
@@ -231,13 +231,13 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
                   <button
                     disabled={loading === "meeting"}
                     onClick={handleSendInvitation}
-                    className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="flex-1 rounded bg-burgundy py-2 text-sm font-semibold text-white hover:bg-burgundy-dark disabled:opacity-50"
                   >
                     {loading === "meeting" ? "Sending…" : "Send Invitation"}
                   </button>
                   <button
                     onClick={() => { setShowMeetingForm(false); setMError(""); }}
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                    className="rounded border border-aub-line px-3 py-2 text-sm text-aub-muted hover:bg-aub-panel"
                   >
                     Cancel
                   </button>
@@ -249,7 +249,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
             {!showRejectConfirm ? (
               <button
                 onClick={() => setShowRejectConfirm(true)}
-                className="flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                className="flex w-full items-center justify-center rounded bg-red-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-800"
               >
                 Reject Application
               </button>
@@ -275,7 +275,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
               <button
                 disabled={loading === "done"}
                 onClick={handleMarkMeetingDone}
-                className="flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+                className="flex w-full items-center justify-center rounded bg-bliss-blue px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {loading === "done" ? "Updating…" : "Mark Meeting as Completed"}
               </button>
@@ -285,7 +285,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
             {!showAcceptConfirm ? (
               <button
                 onClick={() => setShowAcceptConfirm(true)}
-                className="flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-green-700"
+                className="flex w-full items-center justify-center rounded bg-burgundy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-burgundy-dark"
               >
                 Final Accept
               </button>
@@ -304,7 +304,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
             {!showRejectConfirm ? (
               <button
                 onClick={() => setShowRejectConfirm(true)}
-                className="flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                className="flex w-full items-center justify-center rounded bg-red-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-800"
               >
                 Final Reject
               </button>
@@ -374,14 +374,14 @@ function ConfirmBox({
   onCancel: () => void;
 }) {
   return (
-    <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
-      <p className="text-sm text-gray-700">{message}</p>
+    <div className="space-y-3 border border-aub-line bg-aub-soft p-4">
+      <p className="text-sm text-aub-muted">{message}</p>
       <div className="flex gap-2">
         <button
           disabled={disabled}
           onClick={onConfirm}
           className={cn(
-            "flex-1 rounded-lg py-2 text-sm font-medium text-white transition-colors disabled:opacity-50",
+            "flex-1 rounded py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50",
             confirmClass
           )}
         >
@@ -389,7 +389,7 @@ function ConfirmBox({
         </button>
         <button
           onClick={onCancel}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
+          className="rounded border border-aub-line px-3 py-2 text-sm text-aub-muted hover:bg-aub-panel"
         >
           Cancel
         </button>
@@ -412,32 +412,32 @@ function MeetingDetails({ meeting }: { meeting: Meeting }) {
   });
 
   return (
-    <div className="space-y-2 rounded-xl border border-blue-100 bg-blue-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+    <div className="space-y-2 border border-aub-line bg-aub-soft p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-burgundy">
         Scheduled Interview
       </p>
-      <div className="flex items-center gap-2 text-sm text-gray-700">
-        <Calendar className="h-4 w-4 shrink-0 text-blue-500" />
+      <div className="flex items-center gap-2 text-sm text-aub-muted">
+        <Calendar className="h-4 w-4 shrink-0 text-burgundy" />
         {dateStr}
       </div>
-      <div className="flex items-center gap-2 text-sm text-gray-700">
-        <Clock className="h-4 w-4 shrink-0 text-blue-500" />
+      <div className="flex items-center gap-2 text-sm text-aub-muted">
+        <Clock className="h-4 w-4 shrink-0 text-burgundy" />
         {timeStr}
       </div>
       {meeting.location && (
-        <div className="flex items-center gap-2 text-sm text-gray-700">
-          <MapPin className="h-4 w-4 shrink-0 text-blue-500" />
+        <div className="flex items-center gap-2 text-sm text-aub-muted">
+          <MapPin className="h-4 w-4 shrink-0 text-burgundy" />
           {meeting.location}
         </div>
       )}
       {meeting.meeting_link && (
         <div className="flex items-center gap-2 text-sm">
-          <Video className="h-4 w-4 shrink-0 text-blue-500" />
+          <Video className="h-4 w-4 shrink-0 text-burgundy" />
           <a
             href={meeting.meeting_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 underline-offset-2 hover:underline"
+            className="text-burgundy underline-offset-2 hover:underline"
           >
             Join Video Call
           </a>

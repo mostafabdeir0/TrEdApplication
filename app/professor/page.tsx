@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  SlidersHorizontal,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/badge";
 import type { ApplicationStatus } from "@/types";
 
@@ -15,46 +21,31 @@ type AppRow = {
   profiles: { full_name: string; aub_email: string } | null;
 };
 
-const FILTER_TABS = [
-  { label: "All", value: null },
-  { label: "Submitted", value: "submitted" },
-  { label: "Under Review", value: "under_review" },
-  { label: "Meeting Invited", value: "meeting_invited" },
-  { label: "Accepted", value: "accepted" },
-  { label: "Rejected", value: "rejected" },
-] as const;
-
 export default async function ProfessorPage({
   searchParams,
 }: {
   searchParams: { status?: string };
 }) {
-  // Auth check — regular client (reads own profile via owner-read policy)
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Data queries — admin client bypasses RLS so the profile join works
-  // for ALL student rows, not just the professor's own profile.
   const admin = createAdminClient();
-
   const { data: all } = await admin.from("applications").select("id, status");
-
   const statusFilter = searchParams.status as ApplicationStatus | undefined;
   let query = admin
     .from("applications")
-    .select("id, status, major, year_of_study, submitted_at, profiles(full_name, aub_email)")
+    .select(
+      "id, status, major, year_of_study, submitted_at, profiles(full_name, aub_email)"
+    )
     .order("submitted_at", { ascending: false });
 
-  if (statusFilter) {
-    query = query.eq("status", statusFilter);
-  }
+  if (statusFilter) query = query.eq("status", statusFilter);
 
   const { data: applications } = await query;
-  const apps = (applications as AppRow[]) ?? [];
-
+  const apps = (applications as unknown as AppRow[] | null) ?? [];
   const stats = {
     total: all?.length ?? 0,
     pending: all?.filter((a) => a.status === "submitted").length ?? 0,
@@ -65,86 +56,81 @@ export default async function ProfessorPage({
     accepted: all?.filter((a) => a.status === "accepted").length ?? 0,
   };
 
-  return (
-    <div className="p-8">
-      {/* Page title */}
-      <h1 className="text-2xl font-bold text-gray-900">Application Inbox</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Review and manage student applications
-      </p>
+  const statCards = [
+    { label: "Total Apps", value: stats.total, icon: ClipboardList, color: "text-burgundy" },
+    { label: "Pending", value: stats.pending, icon: Clock3, color: "text-[#A03E3D]" },
+    { label: "Scheduled", value: stats.meetings, icon: CalendarDays, color: "text-bliss-blue" },
+    { label: "Accepted", value: stats.accepted, icon: CheckCircle2, color: "text-burgundy" },
+  ];
 
-      {/* Stats bar */}
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { label: "Total", value: stats.total, color: "text-gray-900" },
-          {
-            label: "Pending Review",
-            value: stats.pending,
-            color: "text-amber-600",
-          },
-          {
-            label: "Meetings",
-            value: stats.meetings,
-            color: "text-blue-600",
-          },
-          {
-            label: "Accepted",
-            value: stats.accepted,
-            color: "text-green-600",
-          },
-        ].map((stat) => (
+  return (
+    <div className="mx-auto max-w-7xl px-5 py-12 md:px-10">
+      <header className="mb-8">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-aub-ink">
+          Professor Dashboard
+        </h1>
+        <p className="mt-2 text-lg text-aub-muted">
+          Manage student applications and club reviews for the current semester.
+        </p>
+      </header>
+
+      <section className="mb-16 grid grid-cols-2 gap-5 xl:grid-cols-4">
+        {statCards.map(({ label, value, icon: Icon, color }) => (
           <div
-            key={stat.label}
-            className="rounded-xl bg-white p-5 shadow-sm"
+            key={label}
+            className="border border-aub-line bg-white p-6 shadow-sm"
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-              {stat.label}
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-aub-muted">
+              {label}
             </p>
-            <p className={cn("mt-2 text-3xl font-bold tabular-nums", stat.color)}>
-              {stat.value}
-            </p>
+            <div className="mt-5 flex items-end justify-between">
+              <span className={`font-display text-4xl font-semibold ${color}`}>
+                {value}
+              </span>
+              <Icon className={`h-6 w-6 ${color}`} />
+            </div>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Filter tabs */}
-      <div className="mt-7 flex gap-0.5 border-b border-gray-200">
-        {FILTER_TABS.map((tab) => {
-          const href = tab.value
-            ? `/professor?status=${tab.value}`
-            : "/professor";
-          const active =
-            (statusFilter ?? null) === tab.value;
-          return (
-            <Link
-              key={tab.label}
-              href={href}
-              className={cn(
-                "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                active
-                  ? "border-burgundy text-burgundy"
-                  : "border-transparent text-gray-500 hover:text-gray-800"
-              )}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </div>
+      <section>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display text-3xl font-semibold text-aub-ink">
+              {statusFilter ? "Filtered Applications" : "Recent Applications"}
+            </h2>
+            {statusFilter && (
+              <Link href="/professor" className="mt-1 block text-sm text-burgundy hover:underline">
+                Clear filter
+              </Link>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <span className="flex items-center gap-2 rounded bg-aub-panel px-4 py-2 text-sm font-bold text-aub-ink">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter
+            </span>
+            <span className="rounded bg-aub-panel px-4 py-2 text-sm font-bold text-aub-ink">
+              Sort
+            </span>
+          </div>
+        </div>
 
-      {/* Application list */}
-      <div className="mt-4 space-y-3">
         {apps.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-20 shadow-sm">
-            <span className="text-4xl">📭</span>
-            <p className="mt-3 font-medium text-gray-400">
+          <div className="flex min-h-72 flex-col items-center justify-center border-2 border-dashed border-aub-line bg-white/30 p-10 text-center">
+            <ClipboardList className="h-12 w-12 text-aub-muted/40" />
+            <p className="mt-4 font-display text-xl text-aub-muted">
               No applications here yet
             </p>
           </div>
         ) : (
-          apps.map((app) => <ApplicationCard key={app.id} app={app} />)
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            {apps.map((app) => (
+              <ApplicationCard key={app.id} app={app} />
+            ))}
+          </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
@@ -152,45 +138,52 @@ export default async function ProfessorPage({
 function ApplicationCard({ app }: { app: AppRow }) {
   const name = app.profiles?.full_name ?? "Unknown";
   const email = app.profiles?.aub_email ?? "";
-  const initial = name.charAt(0).toUpperCase();
-
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const date = new Date(app.submitted_at).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
-  const meta = [app.major, app.year_of_study].filter(Boolean).join(" · ");
-
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl bg-white px-6 py-4 shadow-sm transition-shadow hover:shadow-md">
-      {/* Avatar + info */}
-      <div className="flex min-w-0 items-center gap-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-burgundy text-sm font-bold text-white">
-          {initial}
+    <article className="flex min-h-72 flex-col justify-between border border-aub-line bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+      <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-aub-panel text-sm font-bold text-burgundy">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-display text-xl font-semibold leading-tight text-aub-ink">
+                {name}
+              </h3>
+              <p className="truncate text-sm text-aub-muted">
+                {app.major ?? app.year_of_study ?? email}
+              </p>
+            </div>
+          </div>
+          <StatusBadge status={app.status} />
         </div>
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-gray-900">{name}</p>
-          <p className="truncate text-sm text-gray-500">
-            {email}
-            {meta && <span className="text-gray-400"> · {meta}</span>}
-          </p>
-        </div>
+        <p className="mt-7 line-clamp-2 text-sm leading-6 text-aub-muted">
+          {email}
+          {app.year_of_study ? ` · ${app.year_of_study}` : ""}
+        </p>
       </div>
 
-      {/* Right side */}
-      <div className="flex shrink-0 items-center gap-5">
-        <p className="hidden text-xs text-gray-400 sm:block">
-          Submitted {date}
-        </p>
-        <StatusBadge status={app.status} />
+      <div className="mt-8 flex items-center justify-between border-t border-aub-line pt-4">
+        <span className="text-sm italic text-aub-muted">{date}</span>
         <Link
           href={`/professor/applications/${app.id}`}
-          className="rounded-lg bg-burgundy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-burgundy-dark"
+          className="rounded bg-burgundy px-6 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
         >
-          Review →
+          Review
         </Link>
       </div>
-    </div>
+    </article>
   );
 }

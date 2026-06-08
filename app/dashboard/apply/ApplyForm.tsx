@@ -112,26 +112,28 @@ export default function ApplyForm({ fullName, userId }: Props) {
   const totalSteps = STEP_META.length;
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
+    <div className="mx-auto max-w-3xl">
+      <div className="overflow-hidden border border-aub-line bg-white shadow-sm">
         {/* Burgundy header with progress */}
-        <div className="bg-burgundy px-8 py-6">
+        <div className="border-b border-aub-line bg-aub-soft px-8 py-7">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-white">Club Application</h1>
-              <p className="mt-0.5 text-sm text-white/70">
+              <h1 className="font-display text-3xl font-semibold text-burgundy">
+                Club Application
+              </h1>
+              <p className="mt-1 text-sm text-aub-muted">
                 {STEP_META[step].description}
               </p>
             </div>
-            <span className="text-sm font-semibold text-white/70">
+            <span className="text-sm font-semibold text-burgundy">
               {step + 1} / {totalSteps}
             </span>
           </div>
 
           {/* Progress bar */}
-          <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
+          <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-aub-panel">
             <div
-              className="h-full rounded-full bg-white transition-all duration-500 ease-out"
+              className="h-full rounded-full bg-burgundy transition-all duration-500 ease-out"
               style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
             />
           </div>
@@ -144,16 +146,16 @@ export default function ApplyForm({ fullName, userId }: Props) {
                   className={cn(
                     "h-2 w-2 rounded-full transition-all duration-300",
                     i < step
-                      ? "bg-white"
+                      ? "bg-burgundy"
                       : i === step
-                      ? "bg-white ring-2 ring-white/40 ring-offset-1 ring-offset-burgundy"
-                      : "bg-white/30"
+                      ? "bg-burgundy ring-2 ring-burgundy/20 ring-offset-2 ring-offset-aub-soft"
+                      : "bg-aub-line"
                   )}
                 />
                 <span
                   className={cn(
                     "hidden text-center text-[10px] font-medium leading-tight sm:block",
-                    i <= step ? "text-white" : "text-white/40"
+                    i <= step ? "text-burgundy" : "text-aub-muted/40"
                   )}
                 >
                   {s.title}
@@ -165,18 +167,18 @@ export default function ApplyForm({ fullName, userId }: Props) {
 
         {/* Form body */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div className="min-h-72 px-8 py-8">
+          <div className="min-h-72 px-8 py-9">
             {/* ── Step 1: Personal Info ── */}
             {step === 0 && (
               <div className="space-y-5">
                 <div>
-                  <p className="mb-1.5 text-sm font-medium text-gray-700">
+                  <p className="mb-1.5 px-1 text-sm font-medium text-aub-muted">
                     Full Name
                   </p>
-                  <div className="flex h-10 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500">
+                  <div className="flex h-12 items-center rounded-xl border border-aub-line/50 bg-aub-soft px-4 text-sm text-aub-muted">
                     {fullName || <span className="italic">Not set</span>}
                   </div>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 px-1 text-xs text-aub-muted/60">
                     As it appears on your AUB profile
                   </p>
                 </div>
@@ -184,7 +186,7 @@ export default function ApplyForm({ fullName, userId }: Props) {
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="year_of_study"
-                    className="text-sm font-medium text-gray-700"
+                    className="px-1 text-sm font-medium text-aub-muted"
                   >
                     Year of Study
                   </label>
@@ -192,8 +194,8 @@ export default function ApplyForm({ fullName, userId }: Props) {
                     id="year_of_study"
                     {...register("year_of_study")}
                     className={cn(
-                      "h-10 w-full appearance-none rounded-lg border border-gray-300 bg-white px-3 text-sm",
-                      "focus:border-burgundy focus:outline-none focus:ring-2 focus:ring-burgundy/20",
+                      "h-12 w-full appearance-none rounded-xl border border-aub-line/50 bg-white px-4 text-sm text-aub-ink",
+                      "focus:border-burgundy focus:outline-none focus:ring-4 focus:ring-burgundy/5",
                       errors.year_of_study &&
                         "border-red-500 focus:border-red-500 focus:ring-red-500/20"
                     )}
@@ -214,7 +216,7 @@ export default function ApplyForm({ fullName, userId }: Props) {
                     ))}
                   </select>
                   {errors.year_of_study && (
-                    <p className="text-xs text-red-600">
+                    <p className="px-1 text-xs text-red-600">
                       {errors.year_of_study.message}
                     </p>
                   )}
@@ -280,35 +282,35 @@ export default function ApplyForm({ fullName, userId }: Props) {
 
                 {/* CV upload */}
                 <div>
-                  <p className="mb-1.5 text-sm font-medium text-gray-700">
+                  <p className="mb-1.5 px-1 text-sm font-medium text-aub-muted">
                     Upload your CV{" "}
                     <span className="font-normal text-gray-400">(optional · PDF or Word · max 5 MB)</span>
                   </p>
 
                   {cvFile ? (
-                    <div className="flex items-center justify-between rounded-lg border border-burgundy/30 bg-burgundy/5 px-4 py-3">
+                    <div className="flex items-center justify-between rounded-xl border border-burgundy/30 bg-burgundy/5 px-4 py-3">
                       <div className="flex items-center gap-2 text-sm">
                         <FileText className="h-4 w-4 shrink-0 text-burgundy" />
-                        <span className="font-medium text-gray-800 truncate max-w-[260px]">
+                        <span className="max-w-[260px] truncate font-medium text-aub-ink">
                           {cvFile.name}
                         </span>
-                        <span className="text-gray-400">
+                        <span className="text-aub-muted/60">
                           ({(cvFile.size / 1024 / 1024).toFixed(1)} MB)
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => { setCvFile(null); setCvError(""); }}
-                        className="ml-2 rounded p-0.5 text-gray-400 hover:text-red-500"
+                        className="ml-2 rounded p-0.5 text-aub-muted/60 hover:text-red-500"
                         aria-label="Remove CV"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
-                    <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center transition-colors hover:border-burgundy hover:bg-burgundy/5">
-                      <Upload className="h-6 w-6 text-gray-400" />
-                      <span className="text-sm text-gray-500">
+                    <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-aub-line bg-aub-soft px-4 py-7 text-center transition-colors hover:border-burgundy hover:bg-burgundy/5">
+                      <Upload className="h-6 w-6 text-burgundy" />
+                      <span className="text-sm text-aub-muted">
                         Click to browse for your CV
                       </span>
                       <input
@@ -368,7 +370,7 @@ export default function ApplyForm({ fullName, userId }: Props) {
                 />
 
                 {submitError && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     {submitError}
                   </div>
                 )}
@@ -377,7 +379,7 @@ export default function ApplyForm({ fullName, userId }: Props) {
           </div>
 
           {/* Navigation footer */}
-          <div className="flex items-center justify-between border-t border-gray-100 px-8 py-5">
+          <div className="flex items-center justify-between border-t border-aub-line bg-aub-soft/50 px-8 py-5">
             <Button
               type="button"
               variant="ghost"

@@ -1,10 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  BadgeCheck,
+  CalendarDays,
+  Clock,
+  Mail,
+  MapPin,
+  Search,
+  Send,
+  Video,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Application, ApplicationStatus, Meeting } from "@/types";
 import { cn } from "@/lib/utils";
-import { Check, Calendar, Clock, MapPin, Video } from "lucide-react";
+import { StatusBadge } from "@/components/ui/badge";
 
 interface Props {
   application: Application;
@@ -14,28 +24,33 @@ interface Props {
 const STAGES = [
   {
     key: "submitted",
-    label: "Application Submitted",
-    description: "Your application has been received and is awaiting review.",
+    label: "Submitted",
+    description: "Your application has been received and all documents are in order.",
+    icon: Send,
   },
   {
     key: "under_review",
     label: "Under Review",
-    description: "Our faculty advisors are carefully reviewing your application.",
+    description: "The committee is evaluating your application and statement of intent.",
+    icon: Search,
   },
   {
     key: "meeting_invited",
-    label: "Interview Invited",
-    description: "You have been selected for an interview.",
+    label: "Meeting Invited",
+    description: "You have been selected for a formal introduction and interview.",
+    icon: Mail,
   },
   {
     key: "meeting_done",
-    label: "Interview Completed",
+    label: "Meeting Completed",
     description: "Your interview has been completed successfully.",
+    icon: CalendarDays,
   },
   {
     key: "decision",
     label: "Final Decision",
-    description: "A final decision has been made on your application.",
+    description: "Confirmation of your club membership status.",
+    icon: BadgeCheck,
   },
 ] as const;
 
@@ -57,17 +72,16 @@ function isMeetingVisible(status: ApplicationStatus) {
   );
 }
 
-export default function StatusTracker({ application, meeting: initialMeeting }: Props) {
+export default function StatusTracker({
+  application,
+  meeting: initialMeeting,
+}: Props) {
   const [app, setApp] = useState<Application>(application);
   const [meeting, setMeeting] = useState<Meeting | null>(initialMeeting);
-  const supabase = createClient();
-
+  const [supabase] = useState(() => createClient());
   const currentIndex = STATUS_TO_STAGE[app.status];
   const isDecided = app.status === "accepted" || app.status === "rejected";
 
-  // Realtime: subscribe to application updates and meeting inserts/updates.
-  // Requires realtime to be enabled on these tables in Supabase Dashboard →
-  // Database → Replication.
   useEffect(() => {
     const channel = supabase
       .channel(`status-${app.id}`)
@@ -91,9 +105,7 @@ export default function StatusTracker({ application, meeting: initialMeeting }: 
           table: "meetings",
           filter: `application_id=eq.${app.id}`,
         },
-        (payload) => {
-          setMeeting(payload.new as Meeting);
-        }
+        (payload) => setMeeting(payload.new as Meeting)
       )
       .on(
         "postgres_changes",
@@ -103,137 +115,151 @@ export default function StatusTracker({ application, meeting: initialMeeting }: 
           table: "meetings",
           filter: `application_id=eq.${app.id}`,
         },
-        (payload) => {
-          setMeeting(payload.new as Meeting);
-        }
+        (payload) => setMeeting(payload.new as Meeting)
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [app.id]);
+  }, [app.id, supabase]);
+
+  const submittedDate = new Date(app.submitted_at).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      {/* Main card */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
-        {/* Header */}
-        <div className="bg-burgundy px-8 py-6">
-          <h1 className="text-xl font-bold text-white">Application Status</h1>
-          <p className="mt-1 text-sm text-white/70">
-            AUB Club Membership — 2025–2026
-          </p>
-        </div>
+    <>
+      <section className="mb-12">
+        <h1 className="font-display text-5xl font-bold tracking-tight text-burgundy">
+          Your application journey.
+        </h1>
+        <p className="mt-2 max-w-2xl text-lg leading-8 text-aub-muted">
+          Monitor your application as it moves through faculty review,
+          interview, and final decision.
+        </p>
+      </section>
 
-        {/* Timeline */}
-        <div className="px-8 py-6">
-          {STAGES.map((stage, i) => {
-            const isDecisionStage = stage.key === "decision";
-            const isCompleted =
-              i < currentIndex ||
-              (isDecisionStage && isDecided);
-            const isCurrent =
-              i === currentIndex && !(isDecisionStage && isDecided);
-            const isFuture = !isCompleted && !isCurrent;
-            const isLast = i === STAGES.length - 1;
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        <section className="border border-aub-line bg-white p-8 shadow-sm lg:col-span-7">
+          <div className="mb-12 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-display text-3xl font-semibold text-burgundy">
+                Application Status
+              </h2>
+              <p className="text-sm text-aub-muted">
+                AUB Club Membership — 2025–2026
+              </p>
+            </div>
+            <span className="rounded-full border border-burgundy/20 bg-burgundy/10 px-4 py-1.5 text-xs font-bold text-burgundy">
+              Active Journey
+            </span>
+          </div>
 
-            return (
-              <div key={stage.key} className="flex gap-5">
-                {/* Left column: circle + connector */}
-                <div className="flex flex-col items-center">
+          <div className="relative space-y-10 pl-14">
+            <div className="absolute bottom-5 left-5 top-5 w-px bg-aub-line" />
+            {STAGES.map((stage, index) => {
+              const isDecisionStage = stage.key === "decision";
+              const completed =
+                index < currentIndex || (isDecisionStage && isDecided);
+              const current =
+                index === currentIndex && !(isDecisionStage && isDecided);
+              const future = !completed && !current;
+              const Icon = stage.icon;
+
+              return (
+                <div key={stage.key} className="relative">
                   <div
                     className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-500",
-                      isCompleted && "border-burgundy bg-burgundy",
-                      isCurrent && "border-burgundy bg-white",
-                      isFuture && "border-gray-200 bg-white"
+                      "absolute -left-14 z-10 flex h-10 w-10 items-center justify-center rounded-lg border-4 border-white",
+                      completed || current
+                        ? "bg-burgundy text-white"
+                        : "bg-aub-panel text-aub-muted"
                     )}
                   >
-                    {isCompleted && (
-                      <Check className="h-4 w-4 text-white" strokeWidth={3} />
-                    )}
-                    {isCurrent && (
-                      <span className="relative flex h-3 w-3">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-burgundy opacity-50" />
-                        <span className="relative inline-flex h-3 w-3 rounded-full bg-burgundy" />
-                      </span>
-                    )}
+                    <Icon className="h-5 w-5" />
                   </div>
-
-                  {!isLast && (
-                    <div
+                  <div className={cn(future && "opacity-45")}>
+                    <h3
                       className={cn(
-                        "mt-1 w-0.5 flex-1",
-                        isCompleted ? "bg-burgundy" : "bg-gray-100"
+                        "font-semibold",
+                        completed || current ? "text-burgundy" : "text-aub-ink"
                       )}
-                      style={{ minHeight: "36px" }}
-                    />
-                  )}
+                    >
+                      {stage.label}
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-aub-muted">
+                      {stage.description}
+                    </p>
+                    {current && (
+                      <p className="mt-1 text-xs font-bold text-burgundy">
+                        Status: Currently Active
+                      </p>
+                    )}
+                    {stage.key === "meeting_invited" &&
+                      isMeetingVisible(app.status) &&
+                      meeting && <div className="mt-4"><MeetingCard meeting={meeting} /></div>}
+                  </div>
                 </div>
-
-                {/* Right column: text + meeting card */}
-                <div className={cn("pb-7", isLast && "pb-0")}>
-                  <p
-                    className={cn(
-                      "font-semibold leading-snug",
-                      !isFuture ? "text-gray-900" : "text-gray-400"
-                    )}
-                  >
-                    {stage.label}
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-0.5 text-sm",
-                      !isFuture ? "text-gray-500" : "text-gray-300"
-                    )}
-                  >
-                    {stage.description}
-                  </p>
-
-                  {/* Meeting details — shown at the meeting_invited stage */}
-                  {stage.key === "meeting_invited" &&
-                    isMeetingVisible(app.status) && (
-                      <div className="mt-3">
-                        {meeting ? (
-                          <MeetingCard meeting={meeting} />
-                        ) : (
-                          <p className="text-sm italic text-gray-400">
-                            Meeting details will be shared soon.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Decision banners */}
-      {app.status === "accepted" && (
-        <div className="flex items-center gap-4 rounded-2xl border border-green-200 bg-green-50 px-6 py-5">
-          <span className="text-3xl">🎉</span>
-          <div>
-            <p className="font-semibold text-green-800">Congratulations!</p>
-            <p className="mt-0.5 text-sm text-green-700">
-              You have been accepted into the AUB Club. Welcome to the team!
-            </p>
+              );
+            })}
           </div>
-        </div>
-      )}
+        </section>
 
-      {app.status === "rejected" && (
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 px-6 py-5">
-          <p className="font-semibold text-gray-700">Thank you for applying.</p>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Unfortunately, we cannot offer you a spot this year. We encourage
-            you to apply again in the future and wish you the very best.
-          </p>
-        </div>
-      )}
-    </div>
+        <aside className="space-y-5 lg:col-span-5">
+          <section className="border border-aub-line bg-aub-soft p-7">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-aub-muted">
+              Current Status
+            </p>
+            <div className="mt-4">
+              <StatusBadge status={app.status} />
+            </div>
+            <div className="mt-7 border-t border-aub-line pt-5">
+              <p className="text-xs text-aub-muted">Application submitted</p>
+              <p className="mt-1 font-display text-2xl font-semibold text-burgundy">
+                {submittedDate}
+              </p>
+            </div>
+          </section>
+
+          {meeting && isMeetingVisible(app.status) && (
+            <section className="border border-aub-line bg-white p-7 shadow-sm">
+              <h2 className="font-display text-2xl font-semibold text-burgundy">
+                Interview Details
+              </h2>
+              <div className="mt-5">
+                <MeetingCard meeting={meeting} />
+              </div>
+            </section>
+          )}
+
+          {app.status === "accepted" && (
+            <section className="border border-green-200 bg-green-50 p-7">
+              <p className="font-display text-2xl font-semibold text-green-800">
+                Congratulations!
+              </p>
+              <p className="mt-2 text-sm leading-6 text-green-700">
+                You have been accepted into the AUB Club. Welcome to the team.
+              </p>
+            </section>
+          )}
+
+          {app.status === "rejected" && (
+            <section className="border border-aub-line bg-aub-panel p-7">
+              <p className="font-display text-2xl font-semibold text-aub-ink">
+                Thank you for applying.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-aub-muted">
+                We cannot offer you a spot this year, but encourage you to apply
+                again in the future.
+              </p>
+            </section>
+          )}
+        </aside>
+      </div>
+    </>
   );
 }
 
@@ -251,21 +277,10 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
   });
 
   return (
-    <div className="space-y-2 rounded-xl border border-burgundy/20 bg-burgundy/5 p-4">
-      <div className="flex items-center gap-2 text-sm">
-        <Calendar className="h-4 w-4 shrink-0 text-burgundy" />
-        <span className="font-medium text-gray-800">{dateStr}</span>
-      </div>
-      <div className="flex items-center gap-2 text-sm">
-        <Clock className="h-4 w-4 shrink-0 text-burgundy" />
-        <span className="text-gray-700">{timeStr}</span>
-      </div>
-      {meeting.location && (
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4 shrink-0 text-burgundy" />
-          <span className="text-gray-700">{meeting.location}</span>
-        </div>
-      )}
+    <div className="space-y-3 border border-aub-line bg-white p-4">
+      <Detail icon={CalendarDays}>{dateStr}</Detail>
+      <Detail icon={Clock}>{timeStr}</Detail>
+      {meeting.location && <Detail icon={MapPin}>{meeting.location}</Detail>}
       {meeting.meeting_link && (
         <div className="flex items-center gap-2 text-sm">
           <Video className="h-4 w-4 shrink-0 text-burgundy" />
@@ -273,17 +288,32 @@ function MeetingCard({ meeting }: { meeting: Meeting }) {
             href={meeting.meeting_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-burgundy underline-offset-2 hover:underline"
+            className="font-medium text-burgundy hover:underline"
           >
             Join Video Call
           </a>
         </div>
       )}
       {meeting.notes && (
-        <p className="border-t border-burgundy/10 pt-2 text-xs text-gray-500">
+        <p className="border-t border-aub-line pt-3 text-xs text-aub-muted">
           {meeting.notes}
         </p>
       )}
+    </div>
+  );
+}
+
+function Detail({
+  icon: Icon,
+  children,
+}: {
+  icon: typeof CalendarDays;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-aub-muted">
+      <Icon className="h-4 w-4 shrink-0 text-burgundy" />
+      <span>{children}</span>
     </div>
   );
 }

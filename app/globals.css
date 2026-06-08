@@ -4,12 +4,57 @@
 
 @layer base {
   :root {
-    --background: #F9F7F5;
-    --foreground: #1a1a1a;
+    --background: #fbf9f4;
+    --foreground: #1b1c19;
   }
 
   body {
     background-color: var(--background);
     color: var(--foreground);
+  }
+
+  ::selection {
+    background: rgba(107, 26, 42, 0.14);
+    color: #6b1a2a;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+
+  .aub-mesh {
+    background-color: #fbf9f4;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(107, 26, 42, 0.05), transparent 50%),
+      radial-gradient(at 100% 0%, rgba(107, 26, 42, 0.08), transparent 50%),
+      radial-gradient(at 100% 100%, rgba(107, 26, 42, 0.05), transparent 50%),
+      radial-gradient(at 0% 100%, rgba(107, 26, 42, 0.08), transparent 50%);
+    background-size: 200% 200%;
+    animation: aub-mesh 15s ease infinite;
+  }
+
+  .aub-glass {
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 25px 50px -12px rgba(107, 26, 42, 0.15);
+    backdrop-filter: blur(16px);
+  }
+}
+
+@keyframes aub-mesh {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aub-mesh {
+    animation: none;
   }
 }

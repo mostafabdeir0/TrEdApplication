@@ -1,18 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  CalendarCheck,
+  CheckCircle2,
+  HelpCircle,
+  ClipboardList,
+  Clock3,
+  LogOut,
+  Search,
+  Settings,
+  XCircle,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { label: "All Applications", status: null },
-  { label: "Pending Review", status: "submitted" },
-  { label: "Meetings Scheduled", status: "meeting_invited" },
-  { label: "Accepted", status: "accepted" },
-  { label: "Rejected", status: "rejected" },
+  { label: "All Applications", status: null, icon: ClipboardList },
+  { label: "Pending Review", status: "submitted", icon: Clock3 },
+  { label: "Scheduled Meetings", status: "meeting_invited", icon: CalendarCheck },
+  { label: "Accepted", status: "accepted", icon: CheckCircle2 },
+  { label: "Rejected", status: "rejected", icon: XCircle },
 ] as const;
 
 export default function Sidebar({ professorName }: { professorName: string }) {
@@ -22,6 +32,12 @@ export default function Sidebar({ professorName }: { professorName: string }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const initials = professorName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -30,80 +46,106 @@ export default function Sidebar({ professorName }: { professorName: string }) {
   }
 
   function isActive(status: string | null) {
-    // On detail pages, highlight "All Applications"
     if (pathname.startsWith("/professor/applications")) return status === null;
     if (status === null) return pathname === "/professor" && !currentStatus;
     return currentStatus === status;
   }
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col bg-burgundy-dark">
-      {/* Logo */}
-      <div className="border-b border-white/10 px-6 py-5">
-        <Link href="/professor" className="flex items-center gap-3">
-          <span className="text-2xl leading-none">🌲</span>
-          <div>
-            <p className="text-sm font-bold leading-tight text-white">
-              AUB Club Portal
-            </p>
-            <p className="text-[11px] text-white/40">Professor Dashboard</p>
-          </div>
-        </Link>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
-        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-white/30">
-          Applications
-        </p>
-        {NAV.map((item) => {
-          const href =
-            item.status ? `/professor?status=${item.status}` : "/professor";
-          const active = isActive(item.status);
-          return (
+    <>
+      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-aub-line bg-cream px-5 shadow-sm md:px-10">
+        <div className="flex items-center gap-8">
+          <Link
+            href="/professor"
+            className="font-display text-2xl font-semibold text-burgundy"
+          >
+            AUB Portal
+          </Link>
+          <nav className="hidden items-center gap-8 md:flex">
             <Link
-              key={item.label}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                active
-                  ? "bg-white/15 text-white"
-                  : "text-white/55 hover:bg-white/10 hover:text-white"
-              )}
+              href="/professor"
+              className="border-b-2 border-burgundy pb-1 text-sm font-bold text-burgundy"
             >
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  active ? "bg-white" : "bg-white/30"
-                )}
-              />
-              {item.label}
+              Dashboard
             </Link>
-          );
-        })}
-      </nav>
-
-      {/* Professor info + logout */}
-      <div className="border-t border-white/10 p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
-            {professorName.charAt(0).toUpperCase()}
+            <span className="text-sm text-aub-muted">My Applications</span>
+            <span className="text-sm text-aub-muted">Clubs</span>
+            <span className="text-sm text-aub-muted">Calendar</span>
+          </nav>
+        </div>
+        <div className="flex items-center gap-4">
+          <Search className="hidden h-5 w-5 text-aub-muted sm:block" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-aub-line bg-aub-panel text-xs font-bold text-burgundy">
+            {initials}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white">
-              {professorName}
-            </p>
-            <p className="text-[11px] text-white/40">Professor</p>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 text-sm font-semibold text-aub-ink transition-colors hover:text-burgundy disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4 md:hidden" />
+            <span className="hidden md:inline">
+              {loggingOut ? "Signing out..." : "Logout"}
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <aside className="fixed bottom-0 left-0 top-16 z-40 hidden w-64 flex-col border-r border-aub-line bg-aub-soft p-4 md:flex">
+        <div className="mb-8 border-b border-aub-line px-2 pb-8 pt-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-burgundy text-lg font-bold text-white">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-bold text-burgundy">{professorName}</p>
+              <p className="text-sm text-aub-muted">Club Advisor</p>
+            </div>
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/55 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-40"
-        >
-          {loggingOut ? "Signing out…" : "Sign Out"}
-        </button>
-      </div>
-    </aside>
+
+        <nav className="flex-1 space-y-2">
+          {NAV.map((item) => {
+            const href = item.status
+              ? `/professor?status=${item.status}`
+              : "/professor";
+            const active = isActive(item.status);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.label}
+                href={href}
+                className={cn(
+                  "flex items-center gap-4 rounded px-4 py-3.5 text-sm transition-all",
+                  active
+                    ? "bg-burgundy font-semibold text-white shadow-sm"
+                    : "text-aub-muted hover:bg-aub-panel hover:text-burgundy"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="space-y-2 border-t border-aub-line pt-5">
+          <Link
+            href="/professor?status=submitted"
+            className="mb-4 flex w-full items-center justify-center rounded bg-burgundy px-4 py-3 text-sm font-bold text-white shadow-md transition-opacity hover:opacity-90"
+          >
+            Review Pending
+          </Link>
+          <span className="flex items-center gap-4 rounded px-4 py-3 text-sm text-aub-muted">
+            <Settings className="h-5 w-5" />
+            Settings
+          </span>
+          <span className="flex items-center gap-4 rounded px-4 py-3 text-sm text-aub-muted">
+            <HelpCircle className="h-5 w-5" />
+            Support
+          </span>
+        </div>
+      </aside>
+    </>
   );
 }

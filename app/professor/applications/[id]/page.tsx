@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { FileDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { StatusBadge } from "@/components/ui/badge";
 import type { Application, Meeting } from "@/types";
-import { FileDown } from "lucide-react";
 import ActionPanel from "./ActionPanel";
 
 type AppWithProfile = Application & {
@@ -16,16 +16,13 @@ export default async function ApplicationDetailPage({
 }: {
   params: { id: string };
 }) {
-  // Auth check with regular client
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Data with admin client (needs to join student profiles across RLS boundary)
   const admin = createAdminClient();
-
   const { data: raw } = await admin
     .from("applications")
     .select("*, profiles(full_name, aub_email)")
@@ -33,7 +30,6 @@ export default async function ApplicationDetailPage({
     .single();
 
   if (!raw) notFound();
-
   const app = raw as AppWithProfile;
 
   const { data: meeting } = await admin
@@ -50,34 +46,32 @@ export default async function ApplicationDetailPage({
   ];
 
   return (
-    <div className="p-8">
-      {/* Page header */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div className="mx-auto max-w-7xl px-5 py-12 md:px-10">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-aub-line pb-7">
         <div>
           <Link
             href="/professor"
-            className="text-sm text-gray-400 hover:text-gray-600"
+            className="text-sm font-medium text-burgundy hover:underline"
           >
-            ← Back to Inbox
+            ← Back to Applications
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">
+          <h1 className="mt-3 font-display text-4xl font-semibold text-aub-ink">
             {app.profiles.full_name}
           </h1>
-          <p className="text-sm text-gray-500">{app.profiles.aub_email}</p>
+          <p className="mt-1 text-sm text-aub-muted">
+            {app.profiles.aub_email}
+          </p>
         </div>
         <StatusBadge status={app.status} />
       </div>
 
-      {/* Two-column layout */}
-      <div className="flex gap-6">
-        {/* ── LEFT: application details ── */}
+      <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1 space-y-5">
-          {/* Student info grid */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <section className="border border-aub-line bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-aub-muted">
               Student Info
             </h2>
-            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
               {[
                 { label: "Full Name", value: app.profiles.full_name },
                 { label: "AUB Email", value: app.profiles.aub_email },
@@ -85,47 +79,49 @@ export default async function ApplicationDetailPage({
                 { label: "Year of Study", value: app.year_of_study ?? "—" },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <p className="text-xs text-gray-400">{label}</p>
-                  <p className="mt-0.5 text-sm font-medium text-gray-900">
+                  <p className="text-xs uppercase tracking-wide text-aub-muted/65">
+                    {label}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-aub-ink">
                     {value}
                   </p>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Application answers */}
           {fields.map(({ label, content }) => (
-            <div key={label} className="rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+            <section
+              key={label}
+              className="border border-aub-line bg-white p-6 shadow-sm"
+            >
+              <h2 className="mb-3 font-display text-xl font-semibold text-burgundy">
                 {label}
               </h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+              <p className="whitespace-pre-wrap text-sm leading-7 text-aub-muted">
                 {content}
               </p>
-            </div>
+            </section>
           ))}
 
-          {/* CV download */}
           {app.cv_url && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                CV
+            <section className="border border-aub-line bg-white p-6 shadow-sm">
+              <h2 className="mb-3 font-display text-xl font-semibold text-burgundy">
+                Curriculum Vitae
               </h2>
               <CVDownloadLink cvPath={app.cv_url} />
-            </div>
+            </section>
           )}
         </div>
 
-        {/* ── RIGHT: action panel (sticky) ── */}
-        <div className="w-80 shrink-0">
-          <div className="sticky top-8">
+        <aside className="w-full shrink-0 xl:w-80">
+          <div className="sticky top-24">
             <ActionPanel
               application={app}
               meeting={(meeting as Meeting) ?? null}
             />
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   );
@@ -138,7 +134,7 @@ async function CVDownloadLink({ cvPath }: { cvPath: string }) {
     .createSignedUrl(cvPath, 3600);
 
   if (!data?.signedUrl) {
-    return <p className="text-sm italic text-gray-400">CV unavailable</p>;
+    return <p className="text-sm italic text-aub-muted/60">CV unavailable</p>;
   }
 
   return (
@@ -146,7 +142,7 @@ async function CVDownloadLink({ cvPath }: { cvPath: string }) {
       href={data.signedUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+      className="inline-flex items-center gap-2 rounded border border-burgundy px-4 py-2 text-sm font-semibold text-burgundy transition-colors hover:bg-burgundy hover:text-white"
     >
       <FileDown className="h-4 w-4" />
       Download CV

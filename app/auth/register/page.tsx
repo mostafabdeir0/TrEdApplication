@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight, TreePine } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,26 +70,48 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-cream p-4">
-      <div className="w-full max-w-md">
-        <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
-          {/* ── Burgundy header ── */}
-          <div className="bg-burgundy px-8 py-7 text-center">
-            <span className="text-5xl leading-none">🌲</span>
-            <h1 className="mt-3 text-xl font-bold tracking-tight text-white">
-              AUB Club Portal
+    <main className="aub-mesh flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-[480px]">
+        <div className="mb-8 flex flex-col items-center text-burgundy">
+          <div className="flex items-center gap-1">
+            <TreePine className="h-9 w-9" strokeWidth={1.8} />
+            <span className="font-display text-4xl font-bold leading-none">AUB</span>
+          </div>
+          <span className="mt-2 text-[10px] font-semibold uppercase italic tracking-[0.2em] text-burgundy/70">
+            Ut vitam abundantius habeant
+          </span>
+        </div>
+
+        <div className="aub-glass rounded-2xl p-8 md:p-10">
+          <div className="mb-8 text-center">
+            <h1 className="font-display text-3xl font-semibold text-burgundy">
+              Club Application Portal
             </h1>
-            <p className="mt-1 text-sm text-white/70">Create your account</p>
+            <p className="mt-1 text-sm text-aub-muted/80">
+              Empowering Student Leadership at AUB
+            </p>
           </div>
 
-          {/* ── Form ── */}
+          <div className="relative mb-8 grid grid-cols-2 rounded-xl bg-aub-panel p-1">
+            <Link
+              href="/auth/login"
+              className="relative z-10 py-2.5 text-center text-sm font-medium text-aub-muted"
+            >
+              Login
+            </Link>
+            <span className="absolute inset-y-1 right-1 w-[calc(50%-4px)] rounded-lg bg-burgundy" />
+            <span className="relative z-10 py-2.5 text-center text-sm font-medium text-white">
+              Register
+            </span>
+          </div>
+
           <form
             onSubmit={handleSubmit(onSubmit)}
             noValidate
-            className="space-y-5 px-8 py-7"
+            className="space-y-4"
           >
             {serverError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {serverError}
               </div>
             )}
@@ -98,36 +121,37 @@ export default function RegisterPage() {
               label="Full Name"
               placeholder="e.g. Layla Hassan"
               autoComplete="name"
+              className="h-14"
               {...register("full_name")}
               error={errors.full_name?.message}
             />
-
             <Input
               id="email"
               label="AUB Email"
               type="email"
               placeholder="username@mail.aub.edu"
               autoComplete="email"
+              className="h-14"
               {...register("email")}
               error={errors.email?.message}
             />
-
             <Input
               id="password"
               label="Password"
               type="password"
               placeholder="Min. 8 characters"
               autoComplete="new-password"
+              className="h-14"
               {...register("password")}
               error={errors.password?.message}
             />
-
             <Input
               id="confirm_password"
               label="Confirm Password"
               type="password"
               placeholder="Repeat your password"
               autoComplete="new-password"
+              className="h-14"
               {...register("confirm_password")}
               error={errors.confirm_password?.message}
             />
@@ -135,22 +159,33 @@ export default function RegisterPage() {
             <Button
               type="submit"
               loading={isSubmitting}
-              className="mt-1 w-full"
+              size="lg"
+              className="mt-5 h-14 w-full"
             >
               Create Account
+              <ArrowRight className="h-4 w-4" />
             </Button>
-
-            <p className="text-center text-sm text-gray-500">
-              Already have an account?{" "}
-              <Link
-                href="/auth/login"
-                className="font-medium text-burgundy hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
           </form>
+
+          <div className="mt-8 border-t border-aub-line/20 pt-8 text-center">
+            <p className="text-sm leading-relaxed text-aub-muted/60">
+              Register with your{" "}
+              <span className="font-medium text-burgundy">
+                official AUB email
+              </span>{" "}
+              to verify your student profile.
+            </p>
+          </div>
         </div>
+
+        <footer className="mt-8 text-center text-sm text-aub-muted/50">
+          <p>© 2026 American University of Beirut.</p>
+          <div className="mt-3 flex justify-center gap-6">
+            <span>Support</span>
+            <span className="text-aub-muted/15">•</span>
+            <span>Privacy Policy</span>
+          </div>
+        </footer>
       </div>
     </main>
   );
