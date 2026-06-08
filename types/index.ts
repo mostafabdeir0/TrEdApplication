@@ -25,6 +25,9 @@ export interface Application {
   experience: string;
   goals: string;
   availability: string;
+  year_of_study: string | null;
+  major: string | null;
+  cv_url: string | null;
   submitted_at: string;
   updated_at: string;
 }
