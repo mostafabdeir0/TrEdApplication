@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
   CalendarDays,
   Clock,
+  PartyPopper,
+  Play,
+  X,
   Mail,
   MapPin,
   Search,
@@ -63,6 +66,17 @@ const STATUS_TO_STAGE: Record<ApplicationStatus, number> = {
   rejected: 4,
 };
 
+const CONFETTI = Array.from({ length: 54 }, (_, index) => ({
+  id: index,
+  left: (index * 37) % 100,
+  delay: (index % 12) * 0.09,
+  duration: 2.8 + (index % 7) * 0.18,
+  color: ["#6B1A2A", "#8B2E2E", "#D7A84B", "#1B4F8A", "#F3D7DC"][
+    index % 5
+  ],
+  rotate: (index * 53) % 360,
+}));
+
 function isMeetingVisible(status: ApplicationStatus) {
   return (
     status === "meeting_invited" ||
@@ -79,8 +93,24 @@ export default function StatusTracker({
   const [app, setApp] = useState<Application>(application);
   const [meeting, setMeeting] = useState<Meeting | null>(initialMeeting);
   const [supabase] = useState(() => createClient());
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentIndex = STATUS_TO_STAGE[app.status];
   const isDecided = app.status === "accepted" || app.status === "rejected";
+
+  const playApplause = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.currentTime = 0;
+    try {
+      await audio.play();
+      setAudioBlocked(false);
+    } catch {
+      setAudioBlocked(true);
+    }
+  }, []);
 
   useEffect(() => {
     const channel = supabase
@@ -124,6 +154,17 @@ export default function StatusTracker({
     };
   }, [app.id, supabase]);
 
+  useEffect(() => {
+    if (app.status !== "accepted") return;
+
+    const storageKey = `aub-acceptance-celebrated:${app.id}`;
+    if (window.localStorage.getItem(storageKey)) return;
+
+    window.localStorage.setItem(storageKey, "true");
+    setShowCelebration(true);
+    void playApplause();
+  }, [app.id, app.status, playApplause]);
+
   const submittedDate = new Date(app.submitted_at).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -132,6 +173,20 @@ export default function StatusTracker({
 
   return (
     <>
+      <audio
+        ref={audioRef}
+        src="/audio/acceptance-applause.mp3"
+        preload="auto"
+      />
+
+      {showCelebration && (
+        <CelebrationOverlay
+          audioBlocked={audioBlocked}
+          onClose={() => setShowCelebration(false)}
+          onPlay={playApplause}
+        />
+      )}
+
       <section className="mb-12">
         <h1 className="font-display text-5xl font-bold tracking-tight text-burgundy">
           Your application journey.
@@ -243,6 +298,17 @@ export default function StatusTracker({
               <p className="mt-2 text-sm leading-6 text-green-700">
                 You have been accepted into the AUB Club. Welcome to the team.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCelebration(true);
+                  void playApplause();
+                }}
+                className="mt-5 inline-flex items-center gap-2 rounded bg-green-800 px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                <PartyPopper className="h-4 w-4" />
+                Replay celebration
+              </button>
             </section>
           )}
 
@@ -260,6 +326,82 @@ export default function StatusTracker({
         </aside>
       </div>
     </>
+  );
+}
+
+function CelebrationOverlay({
+  audioBlocked,
+  onClose,
+  onPlay,
+}: {
+  audioBlocked: boolean;
+  onClose: () => void;
+  onPlay: () => Promise<void>;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-burgundy/80 px-5 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="celebration-title"
+    >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {CONFETTI.map((piece) => (
+          <span
+            key={piece.id}
+            className="acceptance-confetti absolute -top-8 h-4 w-2 rounded-sm"
+            style={{
+              left: `${piece.left}%`,
+              backgroundColor: piece.color,
+              animationDelay: `${piece.delay}s`,
+              animationDuration: `${piece.duration}s`,
+              transform: `rotate(${piece.rotate}deg)`,
+            }}
+          />
+        ))}
+      </div>
+
+      <section className="relative z-10 w-full max-w-xl border border-white/50 bg-cream px-8 py-10 text-center shadow-2xl md:px-12">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full p-2 text-aub-muted transition-colors hover:bg-aub-panel hover:text-burgundy"
+          aria-label="Close celebration"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-burgundy text-white shadow-lg">
+          <PartyPopper className="h-10 w-10" />
+        </div>
+        <p className="mt-6 text-xs font-bold uppercase tracking-[0.24em] text-burgundy">
+          Final Decision
+        </p>
+        <h2
+          id="celebration-title"
+          className="mt-3 font-display text-5xl font-bold text-burgundy"
+        >
+          Congratulations!
+        </h2>
+        <p className="mx-auto mt-4 max-w-md text-lg leading-8 text-aub-muted">
+          Your application has been accepted. Welcome to the AUB Club community.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => void onPlay()}
+          className="mt-8 inline-flex items-center gap-2 rounded bg-burgundy px-6 py-3 text-sm font-bold text-white shadow-lg transition-transform hover:-translate-y-0.5"
+        >
+          <Play className="h-4 w-4 fill-current" />
+          {audioBlocked ? "Play applause" : "Replay applause"}
+        </button>
+        {audioBlocked && (
+          <p className="mt-3 text-xs text-aub-muted/70">
+            Your browser blocked automatic sound. Press the button to play it.
+          </p>
+        )}
+      </section>
+    </div>
   );
 }
 
