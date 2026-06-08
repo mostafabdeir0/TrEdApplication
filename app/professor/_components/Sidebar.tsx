@@ -59,7 +59,7 @@ export default function Sidebar({ professorName }: { professorName: string }) {
             href="/professor"
             className="font-display text-2xl font-semibold text-burgundy"
           >
-            AUB Portal
+            AUB TrEd Portal
           </Link>
           <nav className="hidden items-center gap-8 md:flex">
             <Link
@@ -68,9 +68,6 @@ export default function Sidebar({ professorName }: { professorName: string }) {
             >
               Dashboard
             </Link>
-            <span className="text-sm text-aub-muted">My Applications</span>
-            <span className="text-sm text-aub-muted">Clubs</span>
-            <span className="text-sm text-aub-muted">Calendar</span>
           </nav>
         </div>
         <div className="flex items-center gap-4">

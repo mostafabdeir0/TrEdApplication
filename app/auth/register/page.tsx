@@ -85,7 +85,7 @@ export default function RegisterPage() {
         <div className="aub-glass rounded-2xl p-8 md:p-10">
           <div className="mb-8 text-center">
             <h1 className="font-display text-3xl font-semibold text-burgundy">
-              Club Application Portal
+              TrEd Application Portal
             </h1>
             <p className="mt-1 text-sm text-aub-muted/80">
               Empowering Student Leadership at AUB

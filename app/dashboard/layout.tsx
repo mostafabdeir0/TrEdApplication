@@ -38,7 +38,7 @@ export default async function DashboardLayout({
               href="/dashboard"
               className="font-display text-2xl font-semibold text-burgundy"
             >
-              AUB Portal
+              AUB TrEd Portal
             </Link>
             <nav className="hidden items-center gap-8 md:flex">
               <Link
@@ -48,13 +48,11 @@ export default async function DashboardLayout({
                 Dashboard
               </Link>
               <Link
-                href="/dashboard/status"
+                href="/dashboard/application"
                 className="text-sm text-aub-muted transition-colors hover:text-burgundy"
               >
-                My Application
+                My Applications
               </Link>
-              <span className="text-sm text-aub-muted">Clubs</span>
-              <span className="text-sm text-aub-muted">Calendar</span>
             </nav>
           </div>
 
@@ -77,7 +75,7 @@ export default async function DashboardLayout({
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 md:flex-row md:items-center">
           <div>
             <p className="font-display text-lg font-bold text-burgundy">
-              AUB Portal
+              AUB TrEd Portal
             </p>
             <p className="mt-1 text-sm text-aub-muted">
               © 2026 American University of Beirut. All Rights Reserved.

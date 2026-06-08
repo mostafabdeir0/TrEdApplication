@@ -34,7 +34,7 @@ export default async function ProfessorLayout({
           <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 md:flex-row md:items-center">
             <div>
               <p className="font-display text-xl font-bold text-burgundy">
-                AUB Portal
+                AUB TrEd Portal
               </p>
               <p className="mt-1 text-sm text-aub-muted">
                 © 2026 American University of Beirut. All Rights Reserved.

@@ -296,7 +296,7 @@ export default function StatusTracker({
                 Congratulations!
               </p>
               <p className="mt-2 text-sm leading-6 text-green-700">
-                You have been accepted into the AUB Club. Welcome to the team.
+                Your application has been accepted. Welcome to the TrEd team.
               </p>
               <button
                 type="button"
@@ -325,6 +325,7 @@ export default function StatusTracker({
           )}
         </aside>
       </div>
+
     </>
   );
 }
@@ -384,7 +385,7 @@ function CelebrationOverlay({
           Congratulations!
         </h2>
         <p className="mx-auto mt-4 max-w-md text-lg leading-8 text-aub-muted">
-          Your application has been accepted. Welcome to the AUB Club community.
+          Your application has been accepted. Welcome to the TrEd team.
         </p>
 
         <button
