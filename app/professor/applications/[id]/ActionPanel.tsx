@@ -3,13 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import type { Application, Meeting, ApplicationStatus } from "@/types";
 import { StatusBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Calendar, Clock, MapPin, Video } from "lucide-react";
+import {
+  finalAccept,
+  finalReject,
+  markMeetingDone,
+  markUnderReview,
+  rejectApplication,
+  scheduleInterview,
+} from "./actions";
 
 type AppWithProfile = Application & {
   profiles: { full_name: string; aub_email: string };
@@ -48,30 +54,25 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
   const [mError, setMError] = useState("");
 
   const router = useRouter();
-  const supabase = createClient();
 
   function flash(type: "success" | "error", msg: string) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
   }
 
-  async function patchStatus(next: ApplicationStatus) {
-    const { error } = await supabase
-      .from("applications")
-      .update({ status: next })
-      .eq("id", application.id);
-    if (error) return false;
-    setStatus(next);
-    router.refresh();
-    return true;
-  }
-
-  async function handleStatusUpdate(next: ApplicationStatus) {
+  async function handleStatusUpdate(
+    next: ApplicationStatus,
+    action: (applicationId: string) => Promise<{ success: true } | { error: string }>
+  ) {
     setLoading(next);
-    const ok = await patchStatus(next);
-    ok
-      ? flash("success", "Status updated successfully.")
-      : flash("error", "Failed to update status. Please try again.");
+    const result = await action(application.id);
+    if ("error" in result) {
+      flash("error", result.error);
+    } else {
+      setStatus(next);
+      flash("success", "Status updated successfully.");
+      router.refresh();
+    }
     setLoading(null);
     setShowRejectConfirm(false);
     setShowAcceptConfirm(false);
@@ -86,45 +87,49 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
 
     setLoading("meeting");
     const scheduledAt = new Date(`${mDate}T${mTime}`).toISOString();
-    const payload = {
-      application_id: application.id,
-      scheduled_at: scheduledAt,
-      location: mLocation.trim() || null,
-      meeting_link: mLink.trim() || null,
-      completed: false,
-    };
+    const result = await scheduleInterview(
+      application.id,
+      mDate,
+      mTime,
+      mLocation,
+      mLink
+    );
 
-    const result = meeting
-      ? await supabase.from("meetings").update(payload).eq("id", meeting.id).select().single()
-      : await supabase.from("meetings").insert(payload).select().single();
-
-    if (result.error) {
-      flash("error", "Failed to schedule meeting. Please try again.");
+    if ("error" in result) {
+      flash("error", result.error);
       setLoading(null);
       return;
     }
 
-    setMeeting(result.data as Meeting);
-    const ok = await patchStatus("meeting_invited");
-    ok
-      ? flash("success", "Meeting invitation sent.")
-      : flash("error", "Meeting saved but status update failed.");
+    setMeeting({
+      id: meeting?.id ?? "",
+      application_id: application.id,
+      scheduled_at: scheduledAt,
+      location: mLocation.trim() || null,
+      meeting_link: mLink.trim() || null,
+      notes: meeting?.notes ?? null,
+      completed: false,
+    });
+    setStatus("meeting_invited");
+    flash("success", "Meeting invitation sent.");
     setShowMeetingForm(false);
     setLoading(null);
+    router.refresh();
   }
 
   async function handleMarkMeetingDone() {
     setLoading("done");
-    if (meeting) {
-      await supabase
-        .from("meetings")
-        .update({ completed: true })
-        .eq("id", meeting.id);
+    const result = await markMeetingDone(application.id);
+    if ("error" in result) {
+      flash("error", result.error);
+    } else {
+      setMeeting((current) =>
+        current ? { ...current, completed: true } : current
+      );
+      setStatus("meeting_done");
+      flash("success", "Meeting marked as completed.");
+      router.refresh();
     }
-    const ok = await patchStatus("meeting_done");
-    ok
-      ? flash("success", "Meeting marked as completed.")
-      : flash("error", "Failed to update status.");
     setLoading(null);
   }
 
@@ -169,7 +174,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
             {status === "submitted" && (
               <button
                 disabled={loading === "under_review"}
-                onClick={() => handleStatusUpdate("under_review")}
+                onClick={() => handleStatusUpdate("under_review", markUnderReview)}
                 className="flex w-full items-center justify-center rounded-lg bg-gray-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:opacity-50"
               >
                 {loading === "under_review" ? "Updating…" : "Mark as Under Review"}
@@ -254,7 +259,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
                 confirmLabel={loading === "rejected" ? "Rejecting…" : "Yes, Reject"}
                 confirmClass="bg-red-600 hover:bg-red-700"
                 disabled={loading === "rejected"}
-                onConfirm={() => handleStatusUpdate("rejected")}
+                onConfirm={() => handleStatusUpdate("rejected", rejectApplication)}
                 onCancel={() => setShowRejectConfirm(false)}
               />
             )}
@@ -290,7 +295,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
                 confirmLabel={loading === "accepted" ? "Accepting…" : "Yes, Accept"}
                 confirmClass="bg-green-600 hover:bg-green-700"
                 disabled={loading === "accepted"}
-                onConfirm={() => handleStatusUpdate("accepted")}
+                onConfirm={() => handleStatusUpdate("accepted", finalAccept)}
                 onCancel={() => setShowAcceptConfirm(false)}
               />
             )}
@@ -309,7 +314,7 @@ export default function ActionPanel({ application, meeting: initMeeting }: Props
                 confirmLabel={loading === "rejected" ? "Rejecting…" : "Yes, Reject"}
                 confirmClass="bg-red-600 hover:bg-red-700"
                 disabled={loading === "rejected"}
-                onConfirm={() => handleStatusUpdate("rejected")}
+                onConfirm={() => handleStatusUpdate("rejected", finalReject)}
                 onCancel={() => setShowRejectConfirm(false)}
               />
             )}
